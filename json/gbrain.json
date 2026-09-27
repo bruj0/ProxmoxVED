@@ -1,0 +1,62 @@
+{
+    "name": "GBrain",
+    "slug": "gbrain",
+    "categories": [
+        12
+    ],
+    "date_created": "2026-09-27",
+    "type": "ct",
+    "updateable": true,
+    "privileged": false,
+    "architectures": ["amd64"],
+    "interface_port": 9119,
+    "documentation": "https://github.com/garrytan/gbrain/blob/master/INSTALL_FOR_AGENTS.md",
+    "website": "https://github.com/garrytan/gbrain",
+    "repository": "https://github.com/garrytan/gbrain",
+    "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/gbrain.webp",
+    "description": "GBrain — a personal/team knowledge brain for AI agents (Hermes, Codex, Claude Code, OpenClaw, Muse). Long-term memory with hybrid retrieval, typed graph, and MCP integration. Installs the Bun + TypeScript runtime, the gbrain CLI (configurable repo + ref via var_gbrain_repo and var_gbrain_ref — default https://github.com/garrytan/gbrain@latest-stable), and three always-on systemd-user services (MCP HTTP, optional TLS relay, autopilot daemon). Storage uses the PGLite engine that ships inside gbrain (Postgres 17 compiled to WASM, zero-config, single-process) — no external Postgres or Docker required.",
+    "install_methods": [
+        {
+            "type": "default",
+            "script": "ct/gbrain.sh",
+            "config_path": "/home/gbrain/.gbrain/.env",
+            "resources": {
+                "cpu": 4,
+                "ram": 8192,
+                "hdd": 50,
+                "os": "Debian",
+                "version": "13"
+            }
+        }
+    ],
+    "default_credentials": {
+        "username": null,
+        "password": null
+    },
+    "notes": [
+        {
+            "text": "Install method is interactive: 1) download pinned release (default, v0.59.0.0), 2) bun install -g from GitHub, 3) clone + build from source. Override with var_gbrain_install_method=release|bun|source or pin a different version with var_gbrain_pinned_version=v0.X.Y.Z before running.",
+            "type": "info"
+        },
+        {
+            "text": "Source repository and ref are configurable for the source-build method. Override with var_gbrain_repo (default 'garrytan/gbrain') and var_gbrain_ref (default 'latest-stable'), e.g. `var_gbrain_repo=yourorg/gbrain var_gbrain_ref=feat/your-branch bash ct/gbrain.sh`.",
+            "type": "info"
+        },
+        {
+            "text": "Storage is PGLite (Postgres 17 compiled to WASM, embedded in the gbrain binary). The installer runs `gbrain init --pglite --no-embedding` — zero external dependencies. The brain lives at ~/.gbrain/brain.pglite inside the LXC. To use a real Postgres instead, run the installer once, then `gbrain init --prefer-postgres --allow-docker` to have gbrain spin up its own pgvector container, or `gbrain init --url <conn>` against an existing database.",
+            "type": "info"
+        },
+        {
+            "text": "The gbrain-mcp systemd-user service binds to 0.0.0.0:9119 by default. Restrict access at the host firewall (e.g. Proxmox per-CT pve-firewall on port 9119) if exposing to untrusted networks.",
+            "type": "info"
+        },
+        {
+            "text": "For HTTPS termination in front of the plain-HTTP gbrain-mcp server, drop a TLS cert + key at /home/gbrain/.gbrain/tls/cert.pem and /home/gbrain/.gbrain/tls/key.pem, then `systemctl --user enable --now gbrain-tls-relay.service`. The relay listens on 8443.",
+            "type": "info"
+        },
+        {
+            "text": "Configure the embedding provider before the first `gbrain init`. Default keyless mode works for keyword search only. Example for Cloudflare Workers AI: `gbrain config set embedding_model cloudflare:@cf/baai/bge-m3` (requires CLOUDFLARE_API_TOKEN in /home/gbrain/.gbrain/.env).",
+            "type": "info"
+        }
+    ]
+}
